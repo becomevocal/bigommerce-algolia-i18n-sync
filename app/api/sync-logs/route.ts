@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   try {
     const { hits } = await syncLogIndex.search('', {
       hitsPerPage: limit,
-      sortCriteria: ['timestamp:desc']
+      sort: ['timestamp:desc']
     });
 
     return NextResponse.json({ success: true, logs: hits });
