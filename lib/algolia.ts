@@ -16,25 +16,28 @@ export async function indexProductsToAlgolia(products) {
     const index = client.initIndex(indexName);
 
     const localizedProducts = products.map(product => {
-      const localizedData = locale.code === defaultLocale ? product : product[locale.code];
+      const localizedData = locale.code === defaultLocale ? product : {
+        ...product,
+        ...product[locale.code]  // Merge localized data with default data
+      };
       return {
         objectID: product.id,
-        name: localizedData.basicInformation.name,
-        description: localizedData.basicInformation.description,
-        pageTitle: localizedData.seoInformation.pageTitle,
-        metaDescription: localizedData.seoInformation.metaDescription,
+        name: localizedData.basicInformation?.name || product.basicInformation.name,
+        description: localizedData.basicInformation?.description || product.basicInformation.description,
+        pageTitle: localizedData.seoInformation?.pageTitle || product.seoInformation.pageTitle,
+        metaDescription: localizedData.seoInformation?.metaDescription || product.seoInformation.metaDescription,
         options: product.options.edges.map(edge => ({
           id: edge.node.id,
-          displayName: locale.code === defaultLocale ? edge.node.displayName : edge.node[locale.code]?.displayName || edge.node.displayName,
+          displayName: edge.node[locale.code]?.displayName || edge.node.displayName,
           values: edge.node.values.map(value => ({
             id: value.id,
-            label: locale.code === defaultLocale ? value.label : edge.node[locale.code]?.values.find(v => v.id === value.id)?.label || value.label,
+            label: edge.node[locale.code]?.values.find(v => v.id === value.id)?.label || value.label,
           })),
         })),
         customFields: product.customFields.edges.map(edge => ({
           id: edge.node.id,
           name: edge.node.name,
-          value: locale.code === defaultLocale ? edge.node.value : edge.node[locale.code]?.edges[0]?.node.value || edge.node.value,
+          value: edge.node[locale.code]?.edges[0]?.node.value || edge.node.value,
         })),
       };
     });

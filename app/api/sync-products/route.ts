@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { fetchBigCommerceProducts } from '@/lib/bigcommerce';
 import { indexProductsToAlgolia, logSyncStatus } from '@/lib/algolia';
 
+const DEBUG_MODE = process.env.SYNC_DEBUG_MODE === 'true'; // Set to true to only sync one page of products
+
 export async function GET() {
   const syncId = Date.now().toString();
   try {
@@ -17,7 +19,7 @@ export async function GET() {
       const products = await fetchBigCommerceProducts({ limit: 50, cursor });
       allProducts = allProducts.concat(products);
 
-      if (products.length < 50) {
+      if (products.length < 50 || DEBUG_MODE) {
         hasMore = false;
       } else {
         cursor = products[products.length - 1].id; // Use the last product's ID as the cursor
